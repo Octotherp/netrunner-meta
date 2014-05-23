@@ -1,0 +1,144 @@
+<template name="match">
+ {{> matchlist}}
+</template>
+
+<template name="matchlist">
+  <table class="table match-table">
+    <thead>
+      <tr>
+        <th style="width: 3%;"></th>
+        <th class="col-sm-3">Corporation</th>
+        <th style="width: 3%;"></th>
+        <th class="col-sm-3">Runner</th>
+        <th class="col-sm-2">Results</th>
+        <th class="col-sm-2">Date</th>
+        <th class="col-sm-1"></th>
+      </tr>
+    </thead>
+    <tbody>
+  {{#each matches}}
+    {{#if amIEditing}}
+      {{> editmatchitem}}
+    {{else}}
+      {{> matchitem}}
+    {{/if}}
+  {{/each}}
+    </tbody>
+  </table>
+</template>
+
+<template name="matchitem">
+  <tr class="match-row">
+      {{#winnerWrapper side="corp" match=this}}
+        <div>{{player_name corp_player}}</div>
+        <div {{factionColor corp_identity}}>{{identityName corp_identity}}</div>
+      {{/winnerWrapper}}
+      {{#winnerWrapper side="runner" match=this}}
+        <div>{{player_name runner_player}}</div>
+        <div {{factionColor runner_identity}}>{{identityName runner_identity}}</div>
+      {{/winnerWrapper}}
+    <td>
+      <div>{{corp_agenda}} - {{runner_agenda}}</div>
+      <div>{{result}}</div>
+    </td>
+    <td>{{format_date date}}</td>
+    <td>{{#unless underEdit}}{{#if currentUser}}<a class="edit-row" href="#">Edit</a>{{/if}}{{/unless}}</td>
+  </tr>
+</template>
+
+<template name="editmatchitem">
+  <tr class="info">
+    <td></td>
+    <td>
+        <div><a href="#" id="select-corp-player"></a></div>
+        <div><a href="#" id="select-corp-ident" {{factionColor this.corp_identity}}></a></div>
+    </td>
+    <td> </td>
+    <td>
+        <div><a href="#" id="select-runner-player"></a></div>
+        <div><a href="#" id="select-runner-ident" {{factionColor this.runner_identity}}></a></div>
+    </td>
+    <td>
+        <div><a href="#" id="select-win"></a></div>
+        <div><a href="#" id="select-corp-points"></a> - <a href="#" id="select-runner-points"></a></div>
+    </td>
+    <td><a href="#" id="select-date"></a></td>
+    <td>
+      <div><a class="save-row" href="#">Save</a></div>
+      <div><a class="cancel-row" href="#">Cancel</a></div>
+    </td>
+  </tr>
+</template>
+
+<template name="winnerWrapper">
+  {{#if sideWon}}
+    <td class="vcenter match-cell"><span class="glyphicon glyphicon-star large pull-left text-primary"></span></td>
+    <td>
+      <strong>
+        {{> UI.contentBlock}}
+      </strong>
+    </td>
+  {{else}}
+    <td></td>
+    <td>
+      {{> UI.contentBlock}}
+    </td>
+  {{/if}}
+</template>
+
+<template name="matchdetail">
+  <div class="page-header">
+    {{#if session 'editmatch'}}
+      <span class="pull-right"><button class="btn btn-primary" id="edit-match">Save <span class="glyphicon glyphicon-pencil"></span></button></span>
+    {{else}}
+      <span class="pull-right"><button class="btn btn-default" id="edit-match">Edit <span class="glyphicon glyphicon-pencil"></span></button></span>
+    {{/if}}
+
+    <h3>Match Results<div><small>{{format_date date}}</small></div>
+    </h3>
+  </div>
+
+  <div class="row">
+    <div class="col-md-5">
+      <h3>
+        <span class="pull-right"> 
+          {{#if session 'editmatch'}}
+          <span class="label"> </span>
+          {{else}}
+          <span {{matchStatusAttr "corp"}}>{{matchStatusLabel "corp"}}</span>
+          {{/if}}
+          <div>
+              {{# editAgenda field="editCorpAgenda" value=match.corp_agenda}}<span class="pull-right">{{match.corp_agenda}} AP</span>{{/editAgenda}}
+          </div>
+        </span>
+      </h3>
+      <h3>
+        <a href="#">{{player_name match.corp_player}} </a>
+        <div><small>{{> identity identity=match.corp_identity}}</small></div>
+      </h3>
+    </div>
+    <div class="col-md-2 text-center hidden-xs hidden-sm">
+      <h1>VS</h1>
+    </div>
+    <div class="col-md-5">
+      <h3>
+        <span class="pull-right"> 
+          <span {{matchStatusAttr "runner"}}>{{matchStatusLabel "runner"}}</span>
+          <div><span class="pull-right"><small>{{match.runner_agenda}} AP</small></span></div>
+        </span>
+      </h3>
+      <h3>
+        <a href="#">{{player_name match.runner_player}} </a>
+        <div><small>{{> identity identity=match.runner_identity}}</small></div>
+      </h3>
+    </div>
+  </div>
+</template>
+
+<template name="editAgenda">
+{{#if session 'editmatch'}}
+  <a id="{{field}}" class="editable" data-type="number" href="#" data-value={{value}}>{{> UI.contentBlock}}</a>
+{{else}}
+  {{> UI.contentBlock}}
+{{/if}}
+</template>

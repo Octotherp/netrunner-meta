@@ -1,0 +1,85 @@
+<head>
+  <title>Netrunner</title>
+</head>
+ 
+<body>
+  {{> navbar}}
+  <div class="container">
+    {{> body}}
+  </div>
+</body>
+ 
+<template name="navbar">
+  <nav class="navbar navbar-default navbar-fixed-top" role="navigation">
+    <div class="container">
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar-collapse-1">
+          <span class="sr-only">Toggle navigation</span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="/">RSE Netrunner League</a>
+      </div>
+
+      <div class="collapse navbar-collapse" id="navbar-collapse-1">
+        <ul class="nav navbar-nav">
+          {{#each headers}}
+            <li {{headerActive}}><a href="#" class="header-link" data-url="{{url}}">{{name}}</a></li>
+          {{/each}}
+        </ul>
+        <ul class="nav navbar-nav navbar-right">
+          {{> loginButtons }} <!-- here -->
+        </ul>
+
+      </div>
+    </div>
+  </nav>
+</template>
+
+<template name="body">
+  {{#ifPageIs page="home"}}
+    {{> home}}
+  {{/ifPageIs}}
+  {{#ifPageIs page="player"}}
+    {{> player}}
+  {{/ifPageIs}}
+  {{#ifPageIs page="match"}}
+    {{> match}}
+  {{/ifPageIs}}
+  {{#ifPageIs page="tournament"}}
+    {{> tournament}}
+  {{/ifPageIs}}
+</template>
+
+<template name="ifPageIs">
+{{#if page_is page}}
+  {{> UI.contentBlock}}
+{{/if}}
+</template>
+
+<template name="checkVar">
+{{#if check_var sessionvar val}}
+  {{> UI.contentBlock}}
+{{/if}}
+</template>
+
+<template name="home">
+  Home
+  <div class="btn-group">
+  <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+    Action <span class="caret"></span>
+  </button>
+  <ul class="dropdown-menu" role="menu">
+    <li><a href="#">Action</a></li>
+    <li><a href="#">Another action</a></li>
+    <li><a href="#">Something else here</a></li>
+    <li class="divider"></li>
+    <li><a href="#">Separated link</a></li>
+  </ul>
+</div>
+</template>
+
+<template name="tournament">
+  Tournament
+</template>

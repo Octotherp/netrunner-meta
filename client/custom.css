@@ -1,0 +1,40 @@
+body { padding-top: 70px; }
+
+span.glyphicon.large {
+    font-size: 1.5em;
+    padding-right: 10px;
+}
+
+td.match-cell.vcenter{
+ vertical-align:middle;
+}
+
+.faction-H {
+    color: #6600FF;
+}
+
+.faction-W {
+    color: #006633;
+}
+
+.faction-N {
+    color: #EEBB00;
+}
+
+.faction-J {
+    color: #BB2222;
+}
+
+.faction-S {
+    color: #00BB22;
+}
+
+.faction-A {
+    color: #FF7700;
+}
+
+.faction-C {
+    color: #0099AA;
+}
+
+tr.clickable-row { cursor: pointer; }

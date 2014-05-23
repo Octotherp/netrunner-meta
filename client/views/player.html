@@ -1,0 +1,15 @@
+<template name="player">
+{{#if thePlayer}}
+  Player {{thePlayer}}
+{{else}}
+  {{#each players}}
+    {{> playerItem}}
+  {{/each}}
+{{/if}}
+</template>
+
+<template name="playerItem">
+  <h1>
+    {{name}}
+  </h1>
+</template>
