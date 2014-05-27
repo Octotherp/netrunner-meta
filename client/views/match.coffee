@@ -67,7 +67,7 @@ gatherWin = (match) ->
     {value:3, text:"Milled", fieldValue:"M"}
   ]
 
-  { source: list, value: ($.grep list, (o)->o.fieldValue == match.win)[0].value }
+  { source: list, value: (_.find list, (o) -> o.fieldValue == match.win).value }
 
 Template.editmatchitem.rendered = ->
   c = Players.find()
@@ -89,6 +89,7 @@ Template.editmatchitem.rendered = ->
     showbuttons: false 
     inputclass: "input-sm"
     pk: @data._id
+    placement:'bottom'
     error: (error) -> error
 
   makeEditable = (selector, field, data, success) ->
@@ -98,9 +99,9 @@ Template.editmatchitem.rendered = ->
       success: success
       url: (options) ->
         d = new $.Deferred
-        elem = $.grep data.source, (o) -> o.value == parseInt(options.value)
-        if elem.length
-          Meteor.call 'update_match', options.pk, field, elem[0].fieldValue, (error, result) ->
+        elem = _.find data.source, (o) -> o.value == parseInt(options.value)
+        if elem?
+          Meteor.call 'update_match', options.pk, field, elem.fieldValue, (error, result) ->
             if error? then d.reject error.reason else d.resolve {'pk':options.pk, 'result':result}
         else
           d.reject "Couldn't parse selection"
@@ -121,6 +122,7 @@ Template.editmatchitem.rendered = ->
     setcursor: false
     inputclass: "input-sm"
     pk: @data._id
+    placement:'bottom'
     url: (options) ->
       d = new $.Deferred()
       Meteor.call 'update_match', options.pk, 'corp_agenda', parseInt(options.value), (error, result) ->
@@ -135,6 +137,7 @@ Template.editmatchitem.rendered = ->
     setcursor: false
     inputclass: "input-sm"
     pk: @data._id
+    placement:'bottom'
     url: (options) ->
       d = new $.Deferred()
       Meteor.call 'update_match', options.pk, 'runner_agenda',  parseInt(options.value), (error, result) ->

@@ -1,7 +1,7 @@
 * Create Draft Document for edit
     * show who is editing an entry
-    * popup is under toolbar
 * URL isn't updating with tabs
 * Add a match
 * Tournament view
 * Player view
+* roles https://github.com/alanning/meteor-roles
