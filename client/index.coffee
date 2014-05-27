@@ -36,4 +36,6 @@ Meteor.subscribe 'matches'
 Meteor.subscribe 'drafts'
 
 Meteor.startup ->
+  Meteor.call 'my_connectionId', (error, connId) ->
+    Session.set('connId', connId)
   Backbone.history.start {pushState: true}

@@ -2,7 +2,8 @@ Template.matchlist.matches = ->
   return Matches.find({}, {sort:{date:-1}})
 
 Template.matchlist.amIEditing = ->
-  return Drafts.findOne({matchId:@_id, userId:Meteor.userId()})?
+  draft = Drafts.findOne({matchId:@_id, userId:Meteor.userId(), connectionId:Session.get('connId')})
+  return draft?
 
 Template.matchitem.underEdit = ->
   return Drafts.findOne({matchId:@_id})?
@@ -48,7 +49,7 @@ gatherNames = (cursor, playerid) ->
   playerndx = 0
   list = cursor.map (p) ->
     playerndx = i if p._id == playerid
-    {value: i++, text: p.name, doc:p}
+    {value: i++, text: p.name, fieldValue:p._id}
   {source: list, value: playerndx}
 
 gatherIdents = (cursor, id)->
@@ -56,34 +57,17 @@ gatherIdents = (cursor, id)->
   corpndx = 0
   list = cursor.map (f)->
     corpndx = i if f._id == id
-    {value: i++, text: identityName(f._id), doc: f}
+    {value: i++, text: identityName(f._id), fieldValue: f._id}
   {source:list, value: corpndx}
 
 gatherWin = (match) ->
   list = [
-    {value:1, text:"Agenda", win:"A"}
-    {value:2, text:"Flatlined", win:"F"}
-    {value:3, text:"Milled", win:"M"}
+    {value:1, text:"Agenda", fieldValue:"A"}
+    {value:2, text:"Flatlined", fieldValue:"F"}
+    {value:3, text:"Milled", fieldValue:"M"}
   ]
 
-  { source: list, value: ($.grep list, (o)->o.win == match.win)[0].value }
-
-updateSessionObj = (id, key, value) ->
-  # console.log Session.get id
-  (o = Session.get(id))[key] = value
-  Session.set(id, o)
-  # console.log Session.get id
-
-updateMatch = (options) ->
-  d = new $.Deferred
-  elem = $.grep options.source, (o) -> o.value == parseInt(options.value)
-  if elem.length
-    Meteor.call options.func, options.pk, options.field, elem[0].doc._id, (error, result) ->
-      if error? then d.reject error.reason else d.resolve options.pk
-  else
-    d.reject "Couldn't parse selection"
-
-  d.promise()
+  { source: list, value: ($.grep list, (o)->o.fieldValue == match.win)[0].value }
 
 Template.editmatchitem.rendered = ->
   c = Players.find()
@@ -92,76 +76,42 @@ Template.editmatchitem.rendered = ->
   runner_names = gatherNames c, this.data.runner_player
 
   corp_idents = gatherIdents Identity.find({side:'C'}), this.data.corp_identity
-  runner_idents = gatherIdents Identity.find(), this.data.runner_identity
+  runner_idents = gatherIdents Identity.find({side:'R'}), this.data.runner_identity
   wins = gatherWin this.data
 
-  $('#select-corp-player').editable
+  updateFactionClass = (selector, newfaction) ->
+      selector.removeClass (index, css) ->
+        (css.match(/(^|\s)faction-\S/g) || []).join(' ')
+      selector.addClass "faction-#{newfaction}"
+
+  baseOpts = 
     type: "select"
     showbuttons: false 
     inputclass: "input-sm"
-    source: corp_names.source
-    value: corp_names.value
-    url: updateMatch
     pk: @data._id
-    params: 
-      func: 'update_player'
-      field: 'corp_player'
-      source: corp_names.source
-    error: (error) ->
-      error
-    success: (pk) ->
-      console.log "got a response for #{pk}"
-    # success: (response, newValue) ->
-    #   thisThing = this
-    #   elem = $.grep corp_names.source, (o) -> o.value == parseInt(newValue)
-    #   if elem.length then result = Meteor.call 'update_player', 'corp_player', elem[0].doc._id, (error, result) ->
-    #     if error? then config.error.call(thisThing, error.reasons)
+    error: (error) -> error
 
-  $('#select-runner-player').editable
-    type: "select"
-    inputclass: "input-sm"
-    showbuttons: false 
-    source: runner_names.source
-    value: runner_names.value
-    success: (response, newValue) ->
-      elem = $.grep runner_names.source, (o) -> o.value == parseInt(newValue)
-      if elem.length then updateSessionObj 'match_obj', 'runner_player', elem[0].doc._id
+  makeEditable = (selector, field, data, success) ->
+    $(selector).editable $.extend {}, baseOpts, 
+      source: data.source
+      value: data.value
+      success: success
+      url: (options) ->
+        d = new $.Deferred
+        elem = $.grep data.source, (o) -> o.value == parseInt(options.value)
+        if elem.length
+          Meteor.call 'update_match', options.pk, field, elem[0].fieldValue, (error, result) ->
+            if error? then d.reject error.reason else d.resolve {'pk':options.pk, 'result':result}
+        else
+          d.reject "Couldn't parse selection"
 
-  $('#select-corp-ident').editable
-    type: "select"
-    source: corp_idents.source
-    value: corp_idents.value
-    showbuttons: false 
-    success: (response, newValue) ->
-      elem = $.grep corp_idents.source, (o) -> o.value == parseInt(newValue)
-      if elem.length
-        updateSessionObj 'match_obj', 'corp_identity', elem[0].doc._id
-        $(this).removeClass (index, css) ->
-          (css.match(/(^|\s)faction-\S/g) || []).join(' ')
-        $(this).addClass "faction-#{elem[0].doc.faction}"
+        d.promise()
 
-  $('#select-runner-ident').editable
-    type: "select"
-    source: runner_idents.source
-    value: runner_idents.value
-    showbuttons: false 
-    success: (response, newValue) ->
-      elem = $.grep runner_idents.source, (o) -> o.value == parseInt(newValue)
-      if elem.length
-        updateSessionObj 'match_obj', 'runner_identity', elem[0].doc._id
-        $(this).removeClass (index, css) ->
-          (css.match(/(^|\s)faction-\S/g) || []).join(' ')
-        $(this).addClass "faction-#{elem[0].doc.faction}"
-
-  $('#select-win').editable
-    type: "select"
-    source: wins.source
-    value: wins.value
-    showbuttons: false 
-    inputclass: "input-sm"
-    success: (response, newValue) ->
-      elem = $.grep wins.source, (o) -> o.value == parseInt(newValue)
-      if elem.length then updateSessionObj 'match_obj', 'win', elem[0].win
+  makeEditable '#select-corp-player', 'corp_player', corp_names
+  makeEditable '#select-runner-player', 'runner_player', runner_names
+  makeEditable '#select-corp-ident', 'corp_identity', corp_idents, (value) -> updateFactionClass($('#select-corp-ident'), value.result.faction)
+  makeEditable '#select-runner-ident', 'runner_identity', runner_idents, (value) -> updateFactionClass($('#select-runner-ident'), value.result.faction)
+  makeEditable '#select-win', 'win', wins
 
   $('#select-corp-points').editable
     type: "number"
@@ -170,8 +120,12 @@ Template.editmatchitem.rendered = ->
     clear: false
     setcursor: false
     inputclass: "input-sm"
-    success: (response, newValue) ->
-      updateSessionObj 'match_obj', 'corp_agenda', parseInt(newValue)
+    pk: @data._id
+    url: (options) ->
+      d = new $.Deferred()
+      Meteor.call 'update_match', options.pk, 'corp_agenda', parseInt(options.value), (error, result) ->
+        if error? then d.reject error.reason else d.resolve options.pk
+      d.promise()
 
   $('#select-runner-points').editable
     type: "number"
@@ -180,17 +134,24 @@ Template.editmatchitem.rendered = ->
     clear: false
     setcursor: false
     inputclass: "input-sm"
-    success: (response, newValue) ->
-      updateSessionObj 'match_obj', 'runner_agenda', parseInt(newValue)
+    pk: @data._id
+    url: (options) ->
+      d = new $.Deferred()
+      Meteor.call 'update_match', options.pk, 'runner_agenda',  parseInt(options.value), (error, result) ->
+        if error? then d.reject error.reason else d.resolve options.pk
+      d.promise()
 
   $('#select-date').editable
     type: "date"
     placement: "bottom"
     value: moment(this.data.date).format('YYYY-MM-DD')
     viewformat: 'MM d, yyyy'
-    success: (response, newValue) ->
-      m = moment(newValue).add('m', newValue.getTimezoneOffset() )
-      updateSessionObj 'match_obj', 'date', m.unix()
+    pk: @data._id
+    url: (options) ->
+      d = new $.Deferred()
+      Meteor.call 'update_match', options.pk, 'date', moment(options.value).unix()*1000, (error, result) ->
+        if error? then d.reject error.reason else d.resolve options.pk
+      d.promise()
 
 Template.matchitem.events =
   'click .edit-row': (e) ->

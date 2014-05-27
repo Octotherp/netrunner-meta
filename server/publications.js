@@ -11,5 +11,6 @@ Meteor.publish('matches', function() {
 });
 
 Meteor.publish('drafts', function() {
-  return Drafts.find({}, {fields:{matchId:1, userId:1}});
+  // return Drafts.find();
+  return Drafts.find({}, {fields:{matchId:1, userId:1, connectionId:1}});
 });

@@ -5,10 +5,10 @@
 #     console.log "#{id} went offline"
 
 UserStatus.events.on 'connectionLogin', (e) ->
-  console.log Drafts.remove({userId:e.userId})
+  Drafts.remove({userId:e.userId})
   # console.log "Login #{e.userId}, #{e.connectionId}, #{e.ipAddr}"
 
 UserStatus.events.on 'connectionLogout', (e) ->
   # console.log "Logout #{e.userId}, #{e.connectionId}"
-  console.log "removing disconnect draft"
-  console.log Drafts.remove({userId:e.userId})
+  # console.log "removing disconnect draft"
+  Drafts.remove({userId:e.userId})
